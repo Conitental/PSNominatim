@@ -11,7 +11,7 @@ Function Invoke-NominatimRequest {
         $NominatimServer = Get-NominatimConfig -Parameter 'NominatimServer'
 
         Write-Verbose "Read Nominatim server from config:"
-        Write-Verbose "NominatimServer"
+        Write-Verbose $NominatimServer
     } Else {
         Return
     }
