@@ -31,19 +31,13 @@ Function Test-NominatimConfig {
     }
 
     If(-not ($Configuration.ContainsKey($Parameter))) {
-        Write-Error "Parameter $Parameter could not be found in configuration file:"
-        Write-Error $FilePath
-
-        Write-Error "Setup the configuration using Set-NominatimConfig"
+        Write-Error "Parameter $Parameter could not be found in configuration file`r`n$FilePath`r`nSetup the configuration using Set-NominatimConfig"
 
         Return $false
     }
 
     If([String]::IsNullOrEmpty($Configuration."$Parameter")) {
-        Write-Error "Parameter $Parameter is not configured in configuration file:"
-        Write-Error $FilePath
-
-        Write-Error "Setup the configuration using Set-NominatimConfig"
+        Write-Error "Parameter $Parameter is not configured in configuration file`r`n$FilePath`r`nSetup the configuration using Set-NominatimConfig"
 
         Return $false
     }
