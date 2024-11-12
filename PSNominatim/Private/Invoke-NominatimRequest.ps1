@@ -40,24 +40,26 @@ Function Invoke-NominatimRequest {
         }
     }
 
+    # Regulate usage if we are using the public API
+    If($NominatimServer -match 'https://nominatim.openstreetmap.org') {
+        If(-not (Test-Path Variable:NominatimLastRequestTime)) {
+            # Create the module variable if we are called for the first time
+            Set-Variable -Scope 'Script' -Name 'NominatimLastRequestTime' -Value (Get-Date)
+        } Else {
+            # Decide if need to delay the request to comply with Nominatims usage policy
+            [int]$MillisSinceLastRequest = (Get-Date) - $NominatimLastRequestTime | Select-Object -ExpandProperty 'TotalMilliseconds'
 
-    If(-not (Test-Path Variable:NominatimLastRequestTime)) {
-        # Create the module variable if we are called for the first time
-        Set-Variable -Scope 'Script' -Name 'NominatimLastRequestTime' -Value (Get-Date)
-    } Else {
-        # Decide if need to delay the request to comply with Nominatims usage policy
-        [int]$MillisSinceLastRequest = (Get-Date) - $NominatimLastRequestTime | Select-Object -ExpandProperty 'TotalMilliseconds'
+            Write-Verbose "$MillisSinceLastRequest milliseconds since last request"
 
-        Write-Verbose "$MillisSinceLastRequest milliseconds since last request"
+            If($MillisSinceLastRequest -lt 1000) {
+                Write-Verbose "Waiting for $(1000 - $MillisSinceLastRequest) milliseconds to comply with Nominatims usage policy:"
+                Write-Verbose "https://operations.osmfoundation.org/policies/nominatim/"
 
-        If($MillisSinceLastRequest -lt 1000) {
-            Write-Verbose "Waiting for $(1000 - $MillisSinceLastRequest) milliseconds to comply with Nominatims usage policy:"
-            Write-Verbose "https://operations.osmfoundation.org/policies/nominatim/"
+                Start-Sleep -Milliseconds (1000 - $MillisSinceLastRequest)
+            }
 
-            Start-Sleep -Milliseconds (1000 - $MillisSinceLastRequest)
+            Set-Variable -Scope 'Script' -Name 'NominatimLastRequestTime' -Value (Get-Date)
         }
-
-        Set-Variable -Scope 'Script' -Name 'NominatimLastRequestTime' -Value (Get-Date)
     }
 
     Try {
