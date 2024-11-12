@@ -29,45 +29,45 @@ Function Invoke-NominatimDetailsRequest {
         [String]$RawParameter,
 
 
-        [String]$Endpoint = 'https://nominatim.openstreetmap.org/details?'
+        [String]$Endpoint = '/details?'
     )
 
     Process {
 
-    $ConstructedUri = $Endpoint
+    $ConstructedPath = $Endpoint
 
     # Append parameters for different sets
-    If($PlaceId) { $ConstructedUri += "place_id=$PlaceId&" }
+    If($PlaceId) { $ConstructedPath += "place_id=$PlaceId&" }
 
-    If($OsmId) { $ConstructedUri += "osmid=$OsmId&" }
+    If($OsmId) { $ConstructedPath += "osmid=$OsmId&" }
     If($OsmType) {
         Switch($OsmType) {
-            'Node'      { $ConstructedUri += "osmtype=N&" }
-            'Way'       { $ConstructedUri += "osmtype=W&" }
-            'Relation'  { $ConstructedUri += "osmtype=R&" }
+            'Node'      { $ConstructedPath += "osmtype=N&" }
+            'Way'       { $ConstructedPath += "osmtype=W&" }
+            'Relation'  { $ConstructedPath += "osmtype=R&" }
         }
     }
-    If($Class) { $ConstructedUri += "class=$Class&" }
+    If($Class) { $ConstructedPath += "class=$Class&" }
 
     # Apend the output format
     # We will only need the psobject value for later output
     If($OutputFormat -ne 'psobject') {
-        $ConstructedUri += "format=$OutputFormat&"
+        $ConstructedPath += "format=$OutputFormat&"
     } Else {
-        $ConstructedUri += 'format=json&'
+        $ConstructedPath += 'format=json&'
     }
 
     # Append the generic parameters
-    If($Addressdetails) { $ConstructedUri += 'addressdetails=1&' }
-    If($ExtraTags) { $ConstructedUri += 'extratags=1&' }
-    If($NameDetails) { $ConstructedUri += 'namedetail=1&' }
+    If($Addressdetails) { $ConstructedPath += 'addressdetails=1&' }
+    If($ExtraTags) { $ConstructedPath += 'extratags=1&' }
+    If($NameDetails) { $ConstructedPath += 'namedetail=1&' }
 
-    If($RawParameter) { $ConstructedUri += "$RawParameter&" }
+    If($RawParameter) { $ConstructedPath += "$RawParameter&" }
 
     # Remove the last parameter separator
-    $ConstructedUri = $ConstructedUri -replace '&$'
+    $ConstructedPath = $ConstructedPath -replace '&$'
 
-    $Content = Invoke-NominatimRequest -Uri $ConstructedUri
+    $Content = Invoke-NominatimRequest -Path $ConstructedPath
 
     If($OutputFormat -eq 'psobject') {
         Write-Output ($Content | ConvertFrom-Json)

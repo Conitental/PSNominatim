@@ -2,10 +2,22 @@ Function Invoke-NominatimRequest {
     [CmdletBinding()]
 
     Param(
-        [Uri]$Uri,
+        [String]$Path,
         [String]$UserAgent = 'PSNominatim/1.0',
         [Int]$MaxCachedResults = 20
     )
+
+    If(Test-NominatimConfig -Parameter 'NominatimServer') {
+        $NominatimServer = Get-NominatimConfig -Parameter 'NominatimServer'
+
+        Write-Verbose "Read Nominatim server from config:"
+        Write-Verbose "NominatimServer"
+    } Else {
+        Return
+    }
+
+    # Construct the actual URI to be queried
+    $Uri = $NominatimServer + $Path
 
     If(-not (Test-Path Variable:NominatimRequestCache)) {
         # Create the cache if did not already in this session

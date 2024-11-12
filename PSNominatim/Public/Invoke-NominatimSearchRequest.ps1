@@ -43,43 +43,43 @@ Function Invoke-NominatimSearchRequest {
 
 		[String]$RawParameter,
 
-		[String]$Endpoint = 'https://nominatim.openstreetmap.org/search?'
+		[String]$Endpoint = '/search?'
 	)
 
-	$ConstructedUri = $Endpoint
+	$ConstructedPath = $Endpoint
 
 	# Append the single query for free form requests
-	If($Query) { $ConstructedUri += "q=$Query&" }
+	If($Query) { $ConstructedPath += "q=$Query&" }
 
 	# Append all of the parameters for structured queries
-	If($Amenity) { $ConstructedUri += "amenity=$Amenity&" }
-	If($Street) { $ConstructedUri += "street=$Street&" }
-	If($City) { $ConstructedUri += "city=$City&" }
-	If($County) { $ConstructedUri += "county=$County&" }
-	If($State) { $ConstructedUri += "county=$State&" }
-	If($Country) { $ConstructedUri += "country=$Country&" }
-	If($PostalCode) { $ConstructedUri += "postalcode=$PostalCode&" }
+	If($Amenity) { $ConstructedPath += "amenity=$Amenity&" }
+	If($Street) { $ConstructedPath += "street=$Street&" }
+	If($City) { $ConstructedPath += "city=$City&" }
+	If($County) { $ConstructedPath += "county=$County&" }
+	If($State) { $ConstructedPath += "county=$State&" }
+	If($Country) { $ConstructedPath += "country=$Country&" }
+	If($PostalCode) { $ConstructedPath += "postalcode=$PostalCode&" }
 
 	# Apend the output format
 	# We will only need the psobject value for later output
 	If($OutputFormat -ne 'psobject') {
-		$ConstructedUri += "format=$OutputFormat&"
+		$ConstructedPath += "format=$OutputFormat&"
 	} Else {
-		$ConstructedUri += 'format=jsonv2&'
+		$ConstructedPath += 'format=jsonv2&'
 	}
 
 	# Append the generic parameters
-	If($Limit) { $ConstructedUri += "limit=$Limit&" }
-	If($Addressdetails) { $ConstructedUri += 'addressdetails=1&' }
-	If($ExtraTags) { $ConstructedUri += 'extratags=1&' }
-	If($NameDetails) { $ConstructedUri += 'namedetail=1&' }
+	If($Limit) { $ConstructedPath += "limit=$Limit&" }
+	If($Addressdetails) { $ConstructedPath += 'addressdetails=1&' }
+	If($ExtraTags) { $ConstructedPath += 'extratags=1&' }
+	If($NameDetails) { $ConstructedPath += 'namedetail=1&' }
 
-	If($RawParameter) { $ConstructedUri += "$RawParameter&" }
+	If($RawParameter) { $ConstructedPath += "$RawParameter&" }
 
 	# Remove the last parameter separator
-	$ConstructedUri = $ConstructedUri -replace '&$'
+	$ConstructedPath = $ConstructedPath -replace '&$'
 
-	$Content = Invoke-NominatimRequest -Uri $ConstructedUri
+	$Content = Invoke-NominatimRequest -Path $ConstructedPath
 
 	If($OutputFormat -eq 'psobject') {
 		Write-Output ($Content | ConvertFrom-Json)
