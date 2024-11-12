@@ -4,7 +4,8 @@ Function Invoke-NominatimRequest {
     Param(
         [String]$Path,
         [String]$UserAgent = 'PSNominatim/1.0',
-        [Int]$MaxCachedResults = 20
+        [Int]$MaxCachedResults = 20,
+        [Switch]$IgnoreCache
     )
 
     If(Test-NominatimConfig -Parameter 'NominatimServer') {
@@ -19,26 +20,28 @@ Function Invoke-NominatimRequest {
     # Construct the actual URI to be queried
     $Uri = $NominatimServer + $Path
 
-    If(-not (Test-Path Variable:NominatimRequestCache)) {
-        # Create the cache if did not already in this session
-        Set-Variable -Scope Script -Name NominatimRequestCache -Value (New-Object System.Collections.ArrayList)
-    } Else {
-        $CacheResult = $NominatimRequestCache | Where-Object -Property 'RequestUri' -eq $Uri
+    If(-not $IgnoreCache) {
+        If(-not (Test-Path Variable:NominatimRequestCache)) {
+            # Create the cache if did not already in this session
+            Set-Variable -Scope Script -Name NominatimRequestCache -Value (New-Object System.Collections.ArrayList)
+        } Else {
+            $CacheResult = $NominatimRequestCache | Where-Object -Property 'RequestUri' -eq $Uri
 
-        If($CacheResult) {
-            # Return the cached content and move the content back to the top of the "stack"
-            Write-Verbose "Found cached result for uri:"
-            Write-Verbose $Uri
-            $OldIndex = $NominatimRequestCache.IndexOf($CacheResult)
+            If($CacheResult) {
+                # Return the cached content and move the content back to the top of the "stack"
+                Write-Verbose "Found cached result for uri:"
+                Write-Verbose $Uri
+                $OldIndex = $NominatimRequestCache.IndexOf($CacheResult)
 
-            $NominatimRequestCache.Remove($CacheResult)
-            $NewIndex = $NominatimRequestCache.Add($CacheResult)
+                $NominatimRequestCache.Remove($CacheResult)
+                $NewIndex = $NominatimRequestCache.Add($CacheResult)
 
-            Write-Verbose "Moved found cache result from index $OldIndex to $NewIndex"
+                Write-Verbose "Moved found cache result from index $OldIndex to $NewIndex"
 
-            Return $CacheResult.Content
+                Return $CacheResult.Content
+            }
         }
-    }
+    } Else { Write-Verbose "-IgnoreCache parameter set. Request cache will not be checked"}
 
     # Regulate usage if we are using the public API
     If($NominatimServer -match 'https://nominatim.openstreetmap.org') {
@@ -73,17 +76,19 @@ Function Invoke-NominatimRequest {
             Return
         }
 
-        $NewCacheIndex = $NominatimRequestCache.Add(@{
-            RequestUri = $Uri
-            Content    = $Result.Content
-        })
+        If(-not $IgnoreCache) {
+            $NewCacheIndex = $NominatimRequestCache.Add(@{
+                RequestUri = $Uri
+                Content    = $Result.Content
+            })
 
-        Write-Verbose "Add new cache entry at index $NewCacheIndex"
+            Write-Verbose "Add new cache entry at index $NewCacheIndex"
 
-        If($NominatimRequestCache.Count -gt $MaxCachedResults) {
-            # Remove first entry in cache
-            Write-Verbose "Remove cache entry at index 0"
-            $NominatimRequestCache.RemoveAt(0)
+            If($NominatimRequestCache.Count -gt $MaxCachedResults) {
+                # Remove first entry in cache
+                Write-Verbose "Remove cache entry at index 0"
+                $NominatimRequestCache.RemoveAt(0)
+            }
         }
 
         Return $Result.Content
